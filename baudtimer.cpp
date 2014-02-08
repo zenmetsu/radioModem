@@ -8,6 +8,10 @@
   extern HardwareTimer timer4;
 #endif
 
+#ifdef ___ARDUINO
+  volatile boolean baudOverflow = 0;                  // overflow flag, needed because of Arduino's 
+                                                      // limited timer multiplier selection :(
+#endif
 
 //Timer control routines
 void baud_timer_init() 
@@ -22,6 +26,22 @@ void baud_timer_init()
     timer4.refresh();                                  // Refresh the timer's count, prescale, and overflow
     timer4.resume();                                   // Start the timer counting
   #endif
+
+  #ifdef ___ARDUINO
+    cli();                               // stop interrupts during configuration
+    TCCR1A = 0;                          // Clear TCCR1A register
+    TCCR1B = 0;                          // Clear TCCR1B register
+    TCNT1  = 0;                          // Initialize counter value
+    OCR1A  = 0xFFFF;                     // Set compare match register to maximum value
+    TCCR1B |= (1 << WGM12);              // CTC mode
+                                         // We want 1uS ticks, for 16MHz CPU, we use prescaler of 16
+                                         // as 1MHz = 1uS period, but Arduino is lame and only has
+                                         // 3 bit multiplier, we can have 8 (overflows too quickly)
+                                         // or 64, which operates at 1/4 the desired resolution
+    TCCR1B |= (1 << CS11);               // Configure for 8 prescaler
+    TIMSK1 |= (1 << OCIE1A);             // enable compare interrupt
+    sei();                               // re-enable interrupts 
+  #endif    
 }
 
 
@@ -32,6 +52,11 @@ void baud_timer_restart()
     timer4.setCount(0); 
     timer4.refresh();  
   #endif
+  
+  #ifdef ___ARDUINO
+    TCNT1 = 0;
+    baudOverflow = false;   
+  #endif   
 }
 
 
@@ -40,11 +65,31 @@ unsigned int baud_time_get()
 {
   #ifdef ___MAPLE  
     timer4.pause();
-    unsigned int tmp = timer4.getCount();
-    timer4.setCount(0); 
+    unsigned int tmp = timer4.getCount();  //get current timer count
+    timer4.setCount(0);                    // reset timer count
     timer4.refresh();
     timer4.resume();
+  #endif
+
+  #ifdef ___ARDUINO
+    TCCR1B &= 0xF8;                        // Clear CS10/CS11/CS12 bits, stopping the timer
+    unsigned int tmp = int(TCNT1/2);       // get current timer count, dividing by two
+                                           // because Arduino timer is counting at 2Mhz instead of 1Mhz
+                                           // due to limited prescaler selection
+    tmp += 0x8000 * baudOverflow;          // if timer overflowed, we will add 0xFFFF/2
+    TCNT1 = 0;                             // reset timer count    
+    baudOverflow = false;                  // reset baudOverflow after resetting timer    
+    TCCR1B |= (1 << CS11);                 // Configure for 8 prescaler, restarting timer
   #endif
   
   return tmp;
 }
+
+#ifdef ___ARDUINO
+  ISR(TIMER1_COMPA_vect)
+  {
+    baudOverflow = true;                   // ISR called on overflow, set overflow flag
+  }
+#endif
+
+

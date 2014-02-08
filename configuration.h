@@ -11,4 +11,17 @@
 #define ___OLED
 //#define ___SERIAL
 
+
+// PIN configurations
+
+// Analog input
+#define ANALOG_IN 3 
+
+// Adafruit SSD1306 OLED
+#define OLED_MOSI  27
+#define OLED_CLK   28
+#define OLED_DC    29
+#define OLED_RESET 30   
+#define OLED_CS    31   
+
 #endif

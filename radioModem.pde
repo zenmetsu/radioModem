@@ -13,16 +13,11 @@
   HardwareTimer timer4(4);
 #endif
 
-// PIN ASSIGNMENTS
-#define ANALOG_IN 3    // ANALOG INPUT
+#ifdef ___ARDUINO
+  #include <TimerTwo.h>
+#endif
 
 #ifdef ___OLED
-  #define OLED_MOSI  27   // PA8
-  #define OLED_CLK   28   // PB15
-  #define OLED_DC    29   // PB14
-  #define OLED_RESET 30   // PB13
-  #define OLED_CS    31   // PB12
-
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
 
@@ -32,14 +27,15 @@
 
 #define DELAY_LENGTH 64
 
-#define sbit(port, pin) port->regs->BSRR = BIT(pin)
-#define cbit(port, pin) port->regs->BRR = BIT(pin)
+#ifdef ___MAPLE
+  #define sbit(port, pin) port->regs->BSRR = BIT(pin)
+  #define cbit(port, pin) port->regs->BRR = BIT(pin)
+#endif
 
 // Initialize demodulation components
 void tdtl_init();
 
 // Generic globals
-
 volatile uint16 process;
 volatile F16 td, oldTd;
 
@@ -58,13 +54,18 @@ void handler_adc(void);
 
 void adc_init()
 {
-  #ifdef ___MAPLE
-    
+  #ifdef ___MAPLE  
     timer3.pause();
     timer3.setChannel1Mode(TIMER_OUTPUTCOMPARE);
     timer3.setPeriod(int(1000000/SAMPLE_RATE)); // 122uS = 8192Hz
     timer3.setCompare1(1);  
     timer3.attachCompare1Interrupt(handler_adc);
+  #endif
+  
+  #ifdef ___ARDUINO
+    Timer2.initialize(int(1000000/SAMPLE_RATE));
+    Timer2.stop();
+    Timer2.attachInterrupt(handler_adc);
   #endif
 }  
    
@@ -74,6 +75,11 @@ void io_init()
     pinMode(ANALOG_IN, INPUT_ANALOG);
     pinMode(BOARD_LED_PIN,   OUTPUT);
   #endif 
+  
+  #ifdef ___ARDUINO
+    #define BOARD_LED_PIN, 13);
+    pinMode(BOARD_LED_PIN,   OUTPUT);
+  #endif
   
   #ifdef ___OLED
     display.begin(SSD1306_SWITCHCAPVCC);
@@ -92,6 +98,11 @@ void stop_adc()
   #ifdef ___MAPLE
     timer3.pause();
   #endif  
+  
+  #ifdef ___ARDUINO
+     Timer3.stop();
+  #endif
+  
 }  
 
 
@@ -100,6 +111,10 @@ void start_adc()
 {
   #ifdef ___MAPLE
     timer3.resume();
+  #endif  
+  
+  #ifdef ___ARDUINO
+     Timer2.resume();
   #endif  
 }
 
