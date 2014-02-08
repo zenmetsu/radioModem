@@ -1,6 +1,17 @@
+#include "configuration.h"
+#include <stdint.h>
+
+#ifdef ___MAPLE
+  #include <libmaple_types.h>
+#endif
+
 #include "rtty.h"
 #include "baudtimer.h"
 #include "math.h"
+
+#ifndef atanf
+  #define expf exp
+#endif
 
 //RTTY notes:
 //RTTYrite has a " in stead of a +, we use that.
@@ -76,8 +87,8 @@ const unsigned int RTTY_FIGURES_TO_ASCII[32] = {
 0x85, //RTTY_LTRS//0x1F
 };
 
-uint16 validateRTTY(uint16 character);
-void printRTTY(uint16 character);
+uint16_t validateRTTY(uint16_t character);
+void printRTTY(uint16_t character);
 
 //RTTY global communicator variables
 #define rttyNone 2
@@ -87,21 +98,21 @@ void printRTTY(uint16 character);
 unsigned int rtty_mode = RTTY_LTRS;
 
 //Useful RTTY Constants
-int16 rttySymbolTime;
-int16 rttySwitchTime;
+int16_t rttySymbolTime;
+int16_t rttySwitchTime;
 	
 //RTTY Decode state variables
-int32 rttyMarkTime, rttySpaceTime,
+int32_t rttyMarkTime, rttySpaceTime,
 	rttyDecodeSymbol, rttyDam;
 		
-uint16 rttyCurrentSymbol, rttyProcessMark, rttyProcessSpace,
+uint16_t rttyCurrentSymbol, rttyProcessMark, rttyProcessSpace,
 	rttyCharacter, rttySymbolCount;
 
 F16 lp_alpha, lp_beta;
 F16 e_lp;
 
 void rtty_init() {
-	rttySymbolTime = (uint16)((((float)Fosc / 2.0) / 8.0) / 45.45); // The timer is driven by Fosc / 2 through a 256 prescaler and we are looking for 45.45 baud symbols
+	rttySymbolTime = (uint16_t)((((float)Fosc / 2.0) / 8.0) / 45.45); // The timer is driven by Fosc / 2 through a 256 prescaler and we are looking for 45.45 baud symbols
 	rttySwitchTime = rttySymbolTime / 4;
 	
 	rttyMarkTime = 0;
@@ -128,7 +139,7 @@ void rtty_init() {
 uint16 idxtmp = 0;*/
 
 void rtty_process(F16 e) {
-	uint16 Telaps = baud_time_get();
+	uint16_t Telaps = baud_time_get();
 	
 	/*tmp[idxtmp] = e;
 	if(idxtmp > 1023)
@@ -209,8 +220,8 @@ void rtty_process(F16 e) {
 	}
 	
 	while(rttySymbolCount >= 8) {
-		uint16 overshoot = rttySymbolCount - 8;
-		uint16 adjustedCharacter = rttyCharacter >> overshoot;
+		uint16_t overshoot = rttySymbolCount - 8;
+		uint16_t adjustedCharacter = rttyCharacter >> overshoot;
 		
 		if(validateRTTY(adjustedCharacter)) {
 			adjustedCharacter = bitrev((adjustedCharacter >> 2) & 0x1F, 5);
@@ -223,8 +234,8 @@ void rtty_process(F16 e) {
 	}			
 }
 
-uint16 validateRTTY(uint16 character) {
-	uint16 stopBits = character & 0x0003, startBit = (character & 0x0080) ^ 0x0080;
+uint16_t validateRTTY(uint16_t character) {
+	uint16_t stopBits = character & 0x0003, startBit = (character & 0x0080) ^ 0x0080;
 	
 	if((startBit | stopBits) == 0x0083)
 		return 1;
@@ -232,7 +243,7 @@ uint16 validateRTTY(uint16 character) {
 		return 0;
 }
 
-void printRTTY(uint16 character) {
+void printRTTY(uint16_t character) {
 	switch(rtty_mode) {
 		case RTTY_LTRS:
 			character = RTTY_LETTERS_TO_ASCII[character];

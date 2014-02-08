@@ -1,8 +1,18 @@
+#include <stdint.h>
+#include "configuration.h"
+
+#ifdef ___MAPLE
+  #include <libmaple_types.h>
+#endif
+
 #include "arctanapprox.h"
 #include "math.h"
 
 F16 F16pi, F16pi1By2, atanLookupTable[64];
 
+#ifndef atanf
+  #define atanf atan
+#endif
 
 
 void atan_init() 
@@ -18,10 +28,10 @@ void atan_init()
 
 
 
-uint8 count_leading_unused_bits(uint16 x) 
+uint8_t count_leading_unused_bits(uint16_t x) 
 {
-  uint8 i = 0;	
-  uint8 sign = (x >> 15) & 0x1;
+  uint8_t i = 0;	
+  uint8_t sign = (x >> 15) & 0x1;
 	
   if(sign == 0x1) x = ~x;
 	
@@ -37,10 +47,10 @@ uint8 count_leading_unused_bits(uint16 x)
 
 
 
-uint8 count_trailing_unused_bits(uint16 x) 
+uint8_t count_trailing_unused_bits(uint16_t x) 
 {
-  uint8 i = 0;	
-  uint8 sign = (x >> 15) & 0x1;
+  uint8_t i = 0;	
+  uint8_t sign = (x >> 15) & 0x1;
 	
   if(sign == 0x1) x = ~x;
 	
@@ -54,7 +64,7 @@ uint8 count_trailing_unused_bits(uint16 x)
 
 
 
-uint16 remove_leading_bits(uint8 bitcount, uint16 x) 
+uint16_t remove_leading_bits(uint8_t bitcount, uint16_t x) 
 {
   return (x & 0x8000) | ((x << bitcount) & 0x7FFF);
 }
@@ -93,15 +103,15 @@ F16 atan_lookup(F15 xi, F15 yi)
 	
   F16 val = 0, valp = 0;
 	
-  uint16 i = _y / _x;
-  uint16 r = _y % _x;
+  uint16_t i = _y / _x;
+  uint16_t r = _y % _x;
 	
-  uint8 us = count_leading_unused_bits(r);
-  uint8 ls = count_leading_unused_bits(_x);
+  uint8_t us = count_leading_unused_bits(r);
+  uint8_t ls = count_leading_unused_bits(_x);
 	
   _x >>= (15 - ls - 7);
 	
-  uint16 c = 0xFFFF;
+  uint16_t c = 0xFFFF;
 	
   if(_x != 0) c = (r << us) / _x;
 		

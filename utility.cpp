@@ -1,9 +1,10 @@
 #include "utility.h"
+#include <stdint.h>
 
-uint16 bitrev(uint16 in, uint8 bits) 
+uint16_t bitrev(uint16_t in, uint8_t bits) 
 {
-  uint16 out, marker;
-  uint8 i;
+  uint16_t out, marker;
+  uint8_t i;
 	
   if(bits == 0) return 0;
 	

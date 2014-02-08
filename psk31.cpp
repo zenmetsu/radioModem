@@ -23,22 +23,22 @@ volatile boolean LED = false;
 //Integral for PSK
 #define IE 4
 F16 e_d[IE];
-uint16 e_d_idx;
+uint16_t e_d_idx;
 
 F16 _ie;
 
 //Useful PSK Constants
-int16 pskSymbolTime;
-int16 pskSwitchTime;
+int16_t pskSymbolTime;
+int16_t pskSwitchTime;
 	
 F16 pi, piErr;
 
 //PSK Decode state variables
-int32 pskDam;
-uint16 pskWatch, pskSpace, pskCharacter, pskSymbolCount;
+int32_t pskDam;
+uint16_t pskWatch, pskSpace, pskCharacter, pskSymbolCount;
 
 
-uint16 PSK_TO_PSK_IDX[128] = {
+uint16_t PSK_TO_PSK_IDX[128] = {
 0b1,
 0b11,
 0b101,
@@ -169,7 +169,7 @@ uint16 PSK_TO_PSK_IDX[128] = {
 0b1110111011
 };
 
-uint16 PSK_IDX_TO_ASCII[128] = {
+uint16_t PSK_IDX_TO_ASCII[128] = {
 0x20, // SP
 0x65, // 'e'
 0x74, // 't'
@@ -300,11 +300,11 @@ uint16 PSK_IDX_TO_ASCII[128] = {
 0x1d, // GS
 };
 
-void psk31_print(uint16 character);
+void psk31_print(uint16_t character);
 
 void psk31_init() {
 	//pskSymbolTime = (uint16)((((float)Fosc / 2.0) / 8.0) / 31.25); // The timer is driven by Fosc / 2 through a 256 prescaler and we are looking for 31.25 baud symbols                           
-        pskSymbolTime = (uint16)((float)(72000000/(72*31.25)));             // 32000 ticks = 32mS                                            
+        pskSymbolTime = (uint16_t)((float)(72000000/(72*31.25)));             // 32000 ticks = 32mS                                            
 	pskSwitchTime = pskSymbolTime / 4;                                  
 
 	pi = floatToF16(3.14159265f);
@@ -327,7 +327,7 @@ void psk31_init() {
 
 void psk31_process(F16 e) 
 {      
-  uint16 Telaps = baud_time_get();                               // elapsed time
+  uint16_t Telaps = baud_time_get();                               // elapsed time
 
   _ie += e - e_d[e_d_idx];                                       // ie will be the delta from this reading and the prior one
   e_d[e_d_idx] = e;                                              // e_d is delay buffer, store e as e_d[0]... see next statement regarding index
@@ -379,16 +379,16 @@ void psk31_process(F16 e)
 
 
 
-void psk31_print(uint16 character) 
+void psk31_print(uint16_t character) 
 { 
-  int16 idxOffset = 128 / 2;
-  uint16 idx = idxOffset;
+  int16_t idxOffset = 128 / 2;
+  uint16_t idx = idxOffset;
 	
   while(idxOffset > 0) 
   {		
     if(idx > 128) return;
 			
-    uint16 val = PSK_TO_PSK_IDX[idx];		
+    uint16_t val = PSK_TO_PSK_IDX[idx];		
     idxOffset >>= 1;
 		
     if(val > character) idx -= idxOffset;

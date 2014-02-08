@@ -9,6 +9,7 @@
 #endif
 
 #ifdef ___ARDUINO
+  #include "Arduino.h"
   volatile boolean baudOverflow = 0;                  // overflow flag, needed because of Arduino's 
                                                       // limited timer multiplier selection :(
 #endif

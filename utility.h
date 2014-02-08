@@ -1,4 +1,5 @@
-#include <libmaple_types.h>
+//#include <libmaple_types.h>
+#include <stdint.h>
 
 #ifndef UTILITY_H_
 #define UTILITY_H_
@@ -8,6 +9,6 @@
 //#define Fy (Fosc / 2)
 #define SAMPLE_RATE 8192
 
-uint16 bitrev(uint16 in, uint8 bits);
+uint16_t bitrev(uint16_t in, uint8_t bits);
 
 #endif

@@ -13,10 +13,6 @@
   HardwareTimer timer4(4);
 #endif
 
-#ifdef ___ARDUINO
-  #include <TimerTwo.h>
-#endif
-
 #ifdef ___OLED
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
@@ -36,7 +32,7 @@
 void tdtl_init();
 
 // Generic globals
-volatile uint16 process;
+volatile uint16_t process;
 volatile F16 td, oldTd;
 
 volatile unsigned short int sample_idx;
@@ -48,7 +44,7 @@ unsigned int x = 0;
    
 //Demodulation constants
 F16	e = 0;//, ie = 0;
-uint16 doRTTY = 0, doPSK = 1;
+uint16_t doRTTY = 0, doPSK = 1;
 
 void handler_adc(void);
 
@@ -63,9 +59,13 @@ void adc_init()
   #endif
   
   #ifdef ___ARDUINO
-    Timer2.initialize(int(1000000/SAMPLE_RATE));
-    Timer2.stop();
-    Timer2.attachInterrupt(handler_adc);
+    TCCR2A = 0;                                   // Clear TCCR2A register
+    TCCR2B = 0;                                   // Clear TCCR2B register
+    TCNT2  = 0;                                   // Initialize counter value
+    OCR2A  = (16*10^6) / (SAMPLE_RATE * 8);       // Set compare match register
+    TCCR2A |= (1 << WGM21);                       // Set CTC mode
+    TCCR2B |= (1 << CS21);                        // Set CS21 for 8 prescaler
+    TIMSK2 |= (1 << OCIE2A);                      // Enable Timer2 compare interrupt
   #endif
 }  
    
@@ -77,7 +77,7 @@ void io_init()
   #endif 
   
   #ifdef ___ARDUINO
-    #define BOARD_LED_PIN, 13);
+    #define BOARD_LED_PIN 13
     pinMode(BOARD_LED_PIN,   OUTPUT);
   #endif
   
@@ -100,7 +100,7 @@ void stop_adc()
   #endif  
   
   #ifdef ___ARDUINO
-     Timer3.stop();
+     TCCR2B &= ~(1 << WGM21);                        // Clears WGM21 bit, stopping the timer
   #endif
   
 }  
@@ -114,7 +114,7 @@ void start_adc()
   #endif  
   
   #ifdef ___ARDUINO
-     Timer2.resume();
+     TCCR2B |= (1 << WGM21);                         // Sets WGM21 bit, starting the timer
   #endif  
 }
 
@@ -151,10 +151,10 @@ void loop()
     F16 kfx = F16sub(oldTd, kftau);
     F16 kfy = oldTd;
   
-    uint16 kx_idx = sample_idx + F16Toint(kfx);
+    uint16_t kx_idx = sample_idx + F16Toint(kfx);
     F15 kx_alpha = F16ToF15(kfx);
     
-    uint16 ky_idx = sample_idx;
+    uint16_t ky_idx = sample_idx;
     F15 ky_alpha = F16ToF15(kfy);
   
     
@@ -236,3 +236,10 @@ void handler_adc(void)
     process = 1;
   }	   
 }
+
+#ifdef ___ARDUINO
+  ISR(TIMER2_COMPA_vect)
+  {
+    handler_adc();
+  }
+#endif
