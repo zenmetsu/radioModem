@@ -14,6 +14,9 @@
 #endif
 
 #ifdef ___OLED
+  #ifdef ___ARDUINO
+    #include <Wire.h>
+  #endif
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
 
