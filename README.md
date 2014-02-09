@@ -7,10 +7,13 @@ of RTTY.  This was chosen so as to minimize the need to change the frontend band
 modes.  You should amplify your signal with an opamp prior to feeding it through a DC blocking capacitor to your
 analog input pin.
 
-Notes on architecture...
+Notes on architectures:  I primarily develop on the Maple and use their IDE.  The Maple IDE uses .pde instead of
+.ino files.  You will likely need to rename the .pde to .ino for Teensy and Arduino.  That said, here are a few
+notes regarding the varios platforms.
 
 Maple: 
-  Runs fine as-is. 
+  Runs fine as-is. Haven't tested the Serial output, and will need to change Serial.blah to SerialUSB.blah
+  since the Maple uses Serial.blah for hardware serial devices and not the Serial-over-USB peripheral.
 
 Teensy:
   Compiles with serial output selected.  I have not yet attempted to demodulate BPSK31 on the Teensy, but
@@ -24,8 +27,9 @@ Teensy:
 Arduino:
   Alas, poor Arduino.  I have never managed to get analog reads to work fast enough to demodulate a BPSK31
   signal.  The problem is that the Arduino's analogRead takes something like 50 bazillion clock cycles and
-  I cannot quite get it fast enough to do 8kHz sampling of the incoming signal.  There may be a way to do
-  it from a lowlevel standpoint, but I will have to try working on that at another time.   
+  I cannot quite get it fast enough to do 8kHz sampling of the incoming signal... the best that I can manaage
+  is about 3.1kHz.   There may be a way to do it from a lowlevel standpoint, but I will have to try working 
+  on that at another time.   
 
 
 
