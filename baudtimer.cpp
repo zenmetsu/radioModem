@@ -1,7 +1,11 @@
 #include "configuration.h"
 #include "baudtimer.h"
-#include <wirish.h>
-#include <gpio.h>
+#ifndef ___TEENSY
+  #include <wirish.h>
+  #include <gpio.h>
+#endif
+
+
 
 #ifdef ___MAPLE
   #include <HardwareTimer.h>
@@ -12,6 +16,10 @@
   #include "Arduino.h"
   volatile boolean baudOverflow = 0;                  // overflow flag, needed because of Arduino's 
                                                       // limited timer multiplier selection :(
+#endif
+
+#ifdef ___TEENSY
+  #include <mk20dx128.h>
 #endif
 
 //Timer control routines
@@ -43,6 +51,13 @@ void baud_timer_init()
     TIMSK1 |= (1 << OCIE1A);             // enable compare interrupt
     sei();                               // re-enable interrupts 
   #endif    
+  
+  #ifdef ___TEENSY
+    PIT_LDVAL2 = 0x500000;
+    PIT_TCTRL2 = TIE;
+    PIT_TCTRL2 |= TEN;
+    PIT_TFLG2 |= 1;
+  #endif  
 }
 
 
@@ -58,6 +73,11 @@ void baud_timer_restart()
     TCNT1 = 0;
     baudOverflow = false;   
   #endif   
+  
+  #ifdef ___TEENSY
+    PIT_TCTRL2 &= ~TEN;       // disable and re-enable timer to reset
+    PIT_TCTRL2 |= TEN;  
+  #endif     
 }
 
 
@@ -81,6 +101,12 @@ unsigned int baud_time_get()
     TCNT1 = 0;                             // reset timer count    
     baudOverflow = false;                  // reset baudOverflow after resetting timer    
     TCCR1B |= (1 << CS11);                 // Configure for 8 prescaler, restarting timer
+  #endif
+
+  #ifdef ___TEENSY
+    unsigned int tmp = int(PIT_CVAL2);
+    PIT_TCTRL2 &= ~TEN;                    // disable and re-enable timer to reset
+    PIT_TCTRL2 |= TEN;  
   #endif
   
   return tmp;

@@ -13,10 +13,18 @@
   HardwareTimer timer4(4);
 #endif
 
+#ifdef ___TEENSY
+  #include <Wire.h>
+  #include <mk20dx128.h>
+#endif
+
+#ifdef ___ARDUINO
+  #include <Wire.h>
+#endif
+
+
 #ifdef ___OLED
-  #ifdef ___ARDUINO
-    #include <Wire.h>
-  #endif
+
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
 
@@ -70,6 +78,13 @@ void adc_init()
     TCCR2B |= (1 << CS21);                        // Set CS21 for 8 prescaler
     TIMSK2 |= (1 << OCIE2A);                      // Enable Timer2 compare interrupt
   #endif
+  
+  #ifdef ___TEENSY
+    PIT_LDVAL1 = 0x500000;
+    PIT_TCTRL1 = TIE;
+    PIT_TCTRL1 |= TEN;
+    PIT_TFLG1 |= 1;  
+  #endif
 }  
    
 void io_init()
@@ -83,6 +98,12 @@ void io_init()
     #define BOARD_LED_PIN 13
     pinMode(BOARD_LED_PIN,   OUTPUT);
   #endif
+  
+  #ifdef ___TEENSY
+    SIM_SCGC6 |= SIM_SCGC6_PIT;           // CONFIGURE TIMERS
+    PIT_MCR = 0x00;
+    NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
+  #endif    
   
   #ifdef ___OLED
     display.begin(SSD1306_SWITCHCAPVCC);
@@ -218,6 +239,13 @@ void tdtl_init() {
 	kftau = floatToF16(Fs * tau);
 	td = kftau;
 }
+
+#ifdef ___TEENSY
+extern "C" void pit1_isr() 
+{
+  PIT_TFLG1 = 1; 
+}
+#endif
 
 
 void handler_adc(void)

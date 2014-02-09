@@ -1,18 +1,20 @@
 #include "configuration.h"
+
 #include "psk31.h"
 #include "baudtimer.h"
+
 
 #ifdef ___OLED
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
-
   extern Adafruit_SSD1306 display;
 #endif
+
 
 #define sbit(port, pin) port->regs->BSRR = BIT(pin)
 #define cbit(port, pin) port->regs->BRR = BIT(pin)
 
-volatile boolean LED = false;
+
 
 //PSK31 global communicator variables
 #define psk0 0

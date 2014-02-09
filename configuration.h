@@ -24,4 +24,7 @@
 #define OLED_RESET 30   
 #define OLED_CS    31   
 
+#define TIE 0x2
+#define TEN 0x1
+
 #endif
