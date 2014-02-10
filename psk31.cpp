@@ -1,18 +1,25 @@
 #include "configuration.h"
-
 #include "psk31.h"
 #include "baudtimer.h"
 
+#ifdef ___SERIAL
+  #include <WProgram.h>
+  #include <HardwareSerial.h>
+#endif
 
 #ifdef ___OLED
   #include <Adafruit_GFX.h>
   #include <Adafruit_SSD1306.h>
+
   extern Adafruit_SSD1306 display;
 #endif
 
 
+
+
 #define sbit(port, pin) port->regs->BSRR = BIT(pin)
 #define cbit(port, pin) port->regs->BRR = BIT(pin)
+
 
 
 
@@ -323,6 +330,9 @@ void psk31_init() {
 	
 	for(int i = 0; i < IE; i++)
 		e_d[i] = 0;
+    #ifdef ___SERIAL
+      Serial.begin(9600);
+    #endif
 }
 
 
@@ -412,5 +422,9 @@ void psk31_print(uint16_t character)
     display.print((char)PSK_IDX_TO_ASCII[idx]);
     display.display();
   #endif   
+  
+  #ifdef ___SERIAL
+    Serial.print((char)PSK_IDX_TO_ASCII[idx]);
+  #endif
 }
 

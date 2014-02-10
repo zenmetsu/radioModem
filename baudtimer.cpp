@@ -19,6 +19,8 @@
 #endif
 
 #ifdef ___TEENSY
+  #include "Arduino.h"
+  unsigned long countMicros = micros();
   #include <mk20dx128.h>
 #endif
 
@@ -53,10 +55,13 @@ void baud_timer_init()
   #endif    
   
   #ifdef ___TEENSY
-    PIT_LDVAL2 = 0x500000;
-    PIT_TCTRL2 = TIE;
-    PIT_TCTRL2 |= TEN;
-    PIT_TFLG2 |= 1;
+    countMicros = micros();
+    /*
+    PIT_LDVAL1 = 0x500000;
+    PIT_TCTRL1 = TIE;
+    PIT_TCTRL1 |= TEN;
+    PIT_TFLG1 |= 1;
+    */
   #endif  
 }
 
@@ -75,8 +80,9 @@ void baud_timer_restart()
   #endif   
   
   #ifdef ___TEENSY
-    PIT_TCTRL2 &= ~TEN;       // disable and re-enable timer to reset
-    PIT_TCTRL2 |= TEN;  
+    countMicros = micros();
+    //PIT_TCTRL1 &= ~TEN;       // disable and re-enable timer to reset
+    //PIT_TCTRL1 |= TEN;  
   #endif     
 }
 
@@ -104,9 +110,14 @@ unsigned int baud_time_get()
   #endif
 
   #ifdef ___TEENSY
-    unsigned int tmp = int(PIT_CVAL2);
-    PIT_TCTRL2 &= ~TEN;                    // disable and re-enable timer to reset
-    PIT_TCTRL2 |= TEN;  
+    unsigned int tmp = int(micros() - countMicros);
+    countMicros - micros();
+    /*
+    long elapsedTime = (0x500000 - long(PIT_CVAL1));              // Loaded value - Current Value
+    unsigned int tmp = int(elapsedTime / 48);                     // Divide by megahertz giving microseconds elapsed
+    PIT_TCTRL1 &= ~TEN;                    // disable and re-enable timer to reset
+    PIT_TCTRL1 |= TEN;  
+    */
   #endif
   
   return tmp;
