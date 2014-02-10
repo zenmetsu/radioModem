@@ -16,6 +16,7 @@
 #ifdef ___TEENSY
   #include <Wire.h>
   #include <mk20dx128.h>
+  IntervalTimer sampleTimer;
 #endif
 
 #ifdef ___ARDUINO
@@ -45,6 +46,8 @@ void tdtl_init();
 // Generic globals
 volatile uint16_t process;
 volatile F16 td, oldTd;
+volatile boolean LED_TOG = false;
+
 
 volatile unsigned short int sample_idx;
 volatile F15 sample[DELAY_LENGTH];
@@ -57,7 +60,8 @@ unsigned int x = 0;
 F16	e = 0;//, ie = 0;
 uint16_t doRTTY = 0, doPSK = 1;
 
-void handler_adc(void);
+void handler_adc();
+void wtf();
 
 void adc_init()
 {
@@ -80,10 +84,8 @@ void adc_init()
   #endif
   
   #ifdef ___TEENSY
-    PIT_LDVAL1 = 0x500000;
-    PIT_TCTRL1 = TIE;
-    PIT_TCTRL1 |= TEN;
-    PIT_TFLG1 |= 1;  
+    
+    sampleTimer.begin(handler_adc, 122);//int(1000000/SAMPLE_RATE));
   #endif
 }  
    
@@ -100,9 +102,18 @@ void io_init()
   #endif
   
   #ifdef ___TEENSY
-    SIM_SCGC6 |= SIM_SCGC6_PIT;           // CONFIGURE TIMERS
-    PIT_MCR = 0x00;
-    NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
+    #define BOARD_LED_PIN 13
+    pinMode(BOARD_LED_PIN, OUTPUT);
+    pinMode(OLED_MOSI,  OUTPUT);
+    pinMode(OLED_CLK,   OUTPUT);
+    pinMode(OLED_DC,    OUTPUT);
+    pinMode(OLED_RESET, OUTPUT);
+    pinMode(OLED_CS,    OUTPUT);
+    analogReadRes(12);
+
+    //SIM_SCGC6 |= SIM_SCGC6_PIT;           // CONFIGURE TIMERS
+    //PIT_MCR = 0x00;
+    //NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
   #endif    
   
   #ifdef ___OLED
@@ -111,6 +122,11 @@ void io_init()
     display.clearDisplay();   // clears the screen and buffer    
     display.setTextColor(WHITE);
     display.setCursor(0,0);
+    display.println("radioModem");
+    display.println(" by KF7IJB");
+    display.display();
+    delay(2000);
+    display.clearDisplay();
     display.display();
   #endif    
 }
@@ -240,20 +256,20 @@ void tdtl_init() {
 	td = kftau;
 }
 
-#ifdef ___TEENSY
-extern "C" void pit1_isr() 
+void wtf()
 {
-  PIT_TFLG1 = 1; 
+  digitalWrite(BOARD_LED_PIN, HIGH);
 }
-#endif
 
-
-void handler_adc(void)
+void handler_adc()
 {
+  //digitalWrite(BOARD_LED_PIN,LED_TOG);
+  //LED_TOG = ~LED_TOG;
   td = F16dec(td);                                  
   
   F15 input = (int)(analogRead(ANALOG_IN));
   input = (input - 0x800) << 4;
+  //input = (input - 0x200) << 6;
   
   input = frontend_filter(input);
   
