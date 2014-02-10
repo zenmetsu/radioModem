@@ -314,7 +314,7 @@ void psk31_print(uint16_t character);
 void psk31_init() {
 	//pskSymbolTime = (uint16)((((float)Fosc / 2.0) / 8.0) / 31.25); // The timer is driven by Fosc / 2 through a 256 prescaler and we are looking for 31.25 baud symbols                           
         pskSymbolTime = (uint16_t)((float)(72000000/(72*31.25)));             // 32000 ticks = 32mS                                            
-	pskSwitchTime = pskSymbolTime / 4;                                  
+	pskSwitchTime = (uint16_t)(pskSymbolTime / 4);                                  
 
 	pi = floatToF16(3.14159265f);
 	piErr = pi - floatToF16(3.14159265f / 4.0f);

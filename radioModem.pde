@@ -85,7 +85,7 @@ void adc_init()
   
   #ifdef ___TEENSY
     
-    sampleTimer.begin(handler_adc, 122);//int(1000000/SAMPLE_RATE));
+    sampleTimer.begin(handler_adc, int(1000000/SAMPLE_RATE));//int(1000000/SAMPLE_RATE));
   #endif
 }  
    
@@ -111,7 +111,8 @@ void io_init()
     pinMode(OLED_CS,    OUTPUT);
     analogReadRes(12);
 
-    //SIM_SCGC6 |= SIM_SCGC6_PIT;           // CONFIGURE TIMERS
+    SIM_SCGC6 |= SIM_SCGC6_PIT;           // CONFIGURE TIMERS
+    SIM_SCGC6 |= SIM_SCGC6_FTM0;
     //PIT_MCR = 0x00;
     //NVIC_ENABLE_IRQ(IRQ_PIT_CH0);
   #endif    
@@ -143,6 +144,10 @@ void stop_adc()
      TCCR2B &= ~(1 << WGM21);                        // Clears WGM21 bit, stopping the timer
   #endif
   
+  #ifdef ___TEENSY
+    sampleTimer.end();
+  #endif
+  
 }  
 
 
@@ -155,6 +160,10 @@ void start_adc()
   
   #ifdef ___ARDUINO
      TCCR2B |= (1 << WGM21);                         // Sets WGM21 bit, starting the timer
+  #endif  
+  
+  #ifdef ___TEENSY
+    sampleTimer.begin(handler_adc, int(1000000/SAMPLE_RATE));
   #endif  
 }
 
@@ -263,8 +272,6 @@ void wtf()
 
 void handler_adc()
 {
-  //digitalWrite(BOARD_LED_PIN,LED_TOG);
-  //LED_TOG = ~LED_TOG;
   td = F16dec(td);                                  
   
   F15 input = (int)(analogRead(ANALOG_IN));

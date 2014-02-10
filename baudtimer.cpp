@@ -5,7 +5,14 @@
   #include <gpio.h>
 #endif
 
+volatile bool LED_TG = false;
 
+#ifdef ___OLED
+  #include <Adafruit_GFX.h>
+  #include <Adafruit_SSD1306.h>
+
+  extern Adafruit_SSD1306 display;
+#endif
 
 #ifdef ___MAPLE
   #include <HardwareTimer.h>
@@ -55,7 +62,14 @@ void baud_timer_init()
   #endif    
   
   #ifdef ___TEENSY
-    countMicros = micros();
+    FTM0_MODE |= FTM_MODE_WPDIS;
+    
+    FTM0_CNT = 0;
+    FTM0_CNTIN = 0;
+    FTM0_SC |= FTM_SC_PS(7);
+    FTM0_SC |= FTM_SC_CLKS(1);
+    FTM0_MOD = 0xFFFF;
+    FTM0_MODE |= FTM_MODE_FTMEN;
     /*
     PIT_LDVAL1 = 0x500000;
     PIT_TCTRL1 = TIE;
@@ -80,9 +94,7 @@ void baud_timer_restart()
   #endif   
   
   #ifdef ___TEENSY
-    countMicros = micros();
-    //PIT_TCTRL1 &= ~TEN;       // disable and re-enable timer to reset
-    //PIT_TCTRL1 |= TEN;  
+    FTM0_CNT = 0x0;
   #endif     
 }
 
@@ -110,14 +122,8 @@ unsigned int baud_time_get()
   #endif
 
   #ifdef ___TEENSY
-    unsigned int tmp = int(micros() - countMicros);
-    countMicros - micros();
-    /*
-    long elapsedTime = (0x500000 - long(PIT_CVAL1));              // Loaded value - Current Value
-    unsigned int tmp = int(elapsedTime / 48);                     // Divide by megahertz giving microseconds elapsed
-    PIT_TCTRL1 &= ~TEN;                    // disable and re-enable timer to reset
-    PIT_TCTRL1 |= TEN;  
-    */
+    unsigned int tmp = int(FTM0_CNT*2.8);
+    FTM0_CNT = 0x0;
   #endif
   
   return tmp;
@@ -130,4 +136,9 @@ unsigned int baud_time_get()
   }
 #endif
 
+#ifdef ___TEENSY
+  void ftm0_isr(void)
+  {
+  }
+#endif
 
